@@ -13,7 +13,7 @@ from subprocess import call
 
 import psycopg2
 import pyproj
-from shapely import wkb, wkt
+from shapely import wkb, wkt, geometry
 from shapely.geometry import MultiPoint, LinearRing
 
 from CSVWriter import CSVWriter
@@ -28,7 +28,16 @@ from Station import Station
 
 root = logging.getLogger()
 root.setLevel(logging.DEBUG)
-
+# importing the sys module
+import sys
+  
+# the setrecursionlimit function is
+# used to modify the default recursion
+# limit set by python. Using this, 
+# we can increase the recursion limit
+# to satisfy our needs
+  
+sys.setrecursionlimit(10**6)
 
 class Transnet:
     def __init__(self, _database, _user, _host, _port, _password, _ssid, _poly, _bpoly, _verbose, _validate,
@@ -49,6 +58,7 @@ class Transnet:
         self.voltage_levels = _voltage_levels
         self.load_estimation = _load_estimation
         self.destdir = _destdir
+        print(self.destdir)
         self.chose_continent = _continent
         self.whole_planet = _whole_planet
         self.find_missing_data = _find_missing_data
@@ -56,7 +66,17 @@ class Transnet:
         self.overpass = _overpass
 
         self.connection = {'database': _database, 'user': _user, 'host': _host, 'port': _port}
-        self.conn = psycopg2.connect(password=_password, **self.connection)
+        print(self.connection)
+        print('pass')
+        print(_password)
+        print('db')
+        print(_database)
+        print('user')
+        print(_host)
+        print('port')
+        print(_port)
+        #this would be "psql -p 5432 -h 127.0.0.1 -d austria -U postgres -W" on the command line, for me
+        self.conn = psycopg2.connect(password="asdfjkl1", **self.connection)
         self.cur = self.conn.cursor()
 
         self.covered_nodes = None
@@ -76,6 +96,8 @@ class Transnet:
         else:
             download_string = 'http://download.geofabrik.de/{0}/{1}.poly'.format(continent_name, country)
         urllib.URLopener().retrieve(download_string, '../data/{0}/{1}/pfile.poly'.format(continent_name, country))
+        
+
 
     # noinspection PyMethodMayBeStatic
     def prepare_poly_continent(self, continent_name):
@@ -97,7 +119,14 @@ class Transnet:
     def create_relations(self, stations, lines, _ssid, voltage):
         # root.info('\nStart inference for Substation %s', str(ssid))
         relations = []
-        relations.extend(self.infer_relations(stations, lines, stations[_ssid]))
+        # print('stations[_ssid]')
+        # print(stations[_ssid])
+        inferred_relations=self.infer_relations(stations, lines, stations[_ssid])
+        # print('inferred_relations')
+        # print(inferred_relations)
+        # print('inferred_relations')
+        # print(inferred_relations)
+        relations.extend(inferred_relations)
 
         circuits = []
         for relation in relations:
@@ -108,6 +137,7 @@ class Transnet:
                 station2 = relation[-1]
                 station1.add_connected_station(station2.id, voltage)
                 station2.add_connected_station(station1.id, voltage)
+                # print('creating from relation')
                 circuit = Circuit(relation, voltage, first_line.name, first_line.ref)
                 circuits.append(circuit)
 
@@ -120,23 +150,116 @@ class Transnet:
     def infer_relations(self, stations, lines, station):
         # find lines that cross the station's area - note that
         #  the end point of the line has to be within the substation for valid crossing
+        # self.close_nodes=True
         relations = []
         for line in lines.values():
+            # if(station.serialize()['name']=='Viljandi alajaam'):
+            #     print('station 3')
+            #     quit()
             node_to_continue_id = None
             # here it checks to find the intersecting lines and station, if no intersecting found then looks for line
             # nodes with distance less than 50 meters
-            if self.node_intersect_with_any_station(line.end_point_dict[line.first_node()], [station]):
+            # print('station')
+            # print(station)
+            # print('line')
+            # print(line)
+            # print('line.end_point_dict[line.first_node()], [station]')
+            # print(line.end_point_dict[line.first_node()], [station])
+            # print(station.serialize()['name'])
+            # if(station.serialize()['id']):
+            # if(station.serialize()['id']==100009331):
+
+            #     name=line.serialize()['name']
+            #     print(name)
+            #     quit()
+            #     if(name):
+            #         if(name.find('National Grid Taunton-Alverdiscott')>-1):
+            #             # print(name)
+            #             print('station considered')
+            #             print(station.serialize()['name'])
+
+            #             print(self.node_intersect_with_any_station(line.end_point_dict[line.first_node()], [station]))
+            #             print(self.node_intersect_with_any_station(line.end_point_dict[line.first_node()], [station]))
+            #             print(self.node_within_distance_any_station(line.end_point_dict[line.first_node()], [station]))
+            #             print(self.node_within_distance_any_station(line.end_point_dict[line.last_node()], [station]))
+            #             print(self.close_nodes)
+                        # quit()
+
+            # printstuff=False
+            # if(line.serialize()['name']=='Balti — Tartu 330 kV'):
+            #     # print('line1')
+            #     if(station.serialize()['name']=='Balti EJ alajaam'):
+            #         print('station 1 and line 1')
+            #         printstuff=True
+
+            #     if(station.serialize()['name']=='Tartu alajaam'):
+            #         print('station 0 and line 1')
+            #         printstuff=True
+
+
+            # if(line.serialize()['name']=='Tartu — Sindi 330 kV & Puhja JP — Viljandi 110 kV'):
+            #     # print('line2')
+            #     if(station.serialize()['name']=='Kilingi-Nõmme 330 kV alajaam'):
+            #         print('station 2 and line 2')
+            #         printstuff=True
+
+            #     if(station.serialize()['name']=='Tartu alajaam'):
+            #         print('station 0 and line 2')
+            #         printstuff=True
+
+            int2=False
+            int3=False
+            int4=False
+            int1=self.node_intersect_with_any_station(line.end_point_dict[line.first_node()], [station])
+            if(not int1):
+                int2=self.node_intersect_with_any_station(line.end_point_dict[line.last_node()], [station])
+            int3=self.node_within_distance_any_station(line.end_point_dict[line.first_node()],[station])
+            if(not int3):
+                int4=self.node_within_distance_any_station(line.end_point_dict[line.last_node()],[station])
+            # if(printstuff):
+            #     print([int1,int2,int3,int4])
+            #     print('first node')
+            #     print(line.first_node())
+            #     print('line:'+str(line.end_point_dict[line.first_node()]))
+            #     print('station: POINT: ('+station.serialize()['lon']+' '+station.serialize()['lat']+')')
+            #     print('last node')
+            #     print(line.last_node())
+            #     print('line:'+str(line.end_point_dict[line.last_node()]))
+            #     print('station: POINT: ('+station.serialize()['lon']+' '+station.serialize()['lat']+')')
+            #     print('')
+            #     print('')
+            if int1:
                 node_to_continue_id = line.last_node()
-            elif self.node_intersect_with_any_station(line.end_point_dict[line.last_node()], [station]):
+                # print('node_to_continue_id1') 
+                # print(node_to_continue_id) 
+                # print(int2)
+            elif int2:
                 node_to_continue_id = line.first_node()
-            if self.close_nodes and self.node_within_distance_any_station(line.end_point_dict[line.first_node()],
-                                                                          [station]):
+                # print('node_to_continue_id2')
+                # print(node_to_continue_id) 
+                # if self.close_nodes and self.node_within_distance_any_station(line.end_point_dict[line.first_node()],
+            # if self.close_nodes and self.node_within_distance_any_station(line.end_point_dict[line.first_node()],
+            # print(int3)
+            if int3:
+                # print('node_to_continue_id3')
+                # print(node_to_continue_id)
                 node_to_continue_id = line.last_node()
-            elif self.close_nodes and self.node_within_distance_any_station(line.end_point_dict[line.last_node()],
-                                                                            [station]):
+                # print('node_to_continue_id3')
+            elif int4:
+                # print('node_to_continue_id')
                 node_to_continue_id = line.first_node()
+                # print(node_to_continue_id)
+                # quit()
 
             if node_to_continue_id:
+                # name=line.serialize()['name']
+                # if(name):
+                #     if(name.find('Queen')>-1):
+                #         print(name)
+                #         if(name.find('National Grid Indian Queens-Alverdiscott')>-1):
+                #             print('GOT EM!1')
+                #             print('station')
+                #             print(station.serialize()['name'])
                 self.covered_nodes = set(line.nodes)
                 self.covered_nodes.remove(node_to_continue_id)
                 if line.id in station.covered_line_ids:
@@ -165,6 +288,10 @@ class Transnet:
         if not station_id and self.close_nodes:
             self.node_within_distance_any_station(
                 from_line.end_point_dict[node_to_continue_id], stations.values())
+        # if(from_line.end_point_dict[node_to_continue_id].x>-5 and from_line.end_point_dict[node_to_continue_id].x<-4.8 and from_line.end_point_dict[node_to_continue_id].y <50.5 and from_line.end_point_dict[node_to_continue_id].y >50.2):
+        #     print('from_line.end_point_dict[node_to_continue_id]')
+        #     print(from_line.end_point_dict[node_to_continue_id].x)
+        #     print(from_line.end_point_dict[node_to_continue_id].y)
         if station_id and station_id == start_station.id:  # if node to continue is at the starting station --> LOOP
             root.debug('Encountered loop: %s', self.to_overpass_string(relation))
             return []
@@ -226,16 +353,30 @@ class Transnet:
     # returns if node is in station
     # noinspection PyMethodMayBeStatic
     def node_intersect_with_any_station(self, node, stations):
+        # print('node')
+        # print(node) 
+        # print('stations')
+        # print(stations)
         for station in stations:
+            # print(station.geom)
             if node.intersects(station.geom):
+                # print('success')
                 return station.id
+
+        # print('return NONE')
         return None
 
     # returns if node is within curtain distance
     def node_within_distance_any_station(self, node, stations):
         for station in stations:
+
             distance = self.get_node_station_ditance(node, station)
-            if distance and distance < 50:
+            # if distance and distance < 1000:
+            #     print('distance')
+            #     print(distance)
+            #     print(node)
+            # if distance and distance < 1000:
+            if distance and distance < 300:
                 return station.id
         return None
 
@@ -298,15 +439,72 @@ class Transnet:
     def create_relations_of_region(self, substations, generators, lines, voltage):
         stations = substations.copy()
         stations.update(generators)
+        # for gi in substations.keys():
+        #     val=substations[gi]
+        #     if(val.serialize()['name'].find('Alverdiscott')>-1):
+        #         print(val.serialize()['name'])
+        #         print(val.serialize()['lat'])
+        #         print(val.serialize()['lon'])
+        #         print(gi)
+        #         print('TRUE QUEEN')
+        #         # quit()
+        #         break
         circuits = []
+
         for substation_id in substations.keys():
+            # print(substations[substation_id].serialize()['name'])
+            # print(substations[gi].serialize()['name'])
+            # # quit()
+
+            # isqueen=False
+
+            # if(substations[substation_id].serialize()['name'].find('Queen')>-1):
+                # print('Queen!!')
+                # print('Queen!!')
+                # print('Queen!!')
+                # print('Queen!!')
+                # print('Queen!!')
+                # isqueen=True
+                # quit()
             close_stations_dict = self.get_close_components(stations.values(), stations[substation_id])
+            # for g in close_stations_dict.values():
+            #     if(g.serialize()['name'].find('Queen')>-1):
+            #         print(g.serialize()['name'])
+            #         break
             close_lines_dict = self.get_close_components(lines.values(), stations[substation_id])
-            circuits.extend(self.create_relations(close_stations_dict, close_lines_dict, substation_id, voltage))
+            # print(close_lines_dict)
+            # print('generators')
+            # print(generators)
+            # print('close_stations_dict')
+            # for s in close_stations_dict.values():
+            #     print(s.serialize()['name'])
+            #     if(s):
+            #         if(s.serialize()['name'].find('Queen')>-1):
+            #             break
+            # print('close_lines_dict')
+            # print(close_lines_dict)
+            # print('substation_id')
+            # print(substation_id)
+            relations=self.create_relations(close_stations_dict, close_lines_dict, substation_id, voltage)
+            # if(substation_id==gi):
+            #     print('relations')
+            #     for r in relations:
+            #         r.print_circuit()
+            #        # print(relations)
+                
+            #     quit()
+            # if(isqueen):
+
+                # quit()
+            # print('relations')
+            # print(relations)
+            circuits.extend(relations)
+            
         return circuits
 
     # noinspection PyMethodMayBeStatic
     def remove_duplicates(self, circuits):
+
         root.info('Remove duplicates from %s circuits', str(len(circuits)))
         covered_connections = []
         filtered_circuits = []
@@ -404,6 +602,8 @@ class Transnet:
         first_round = True
         self.cur.execute(query)
         result = self.cur.fetchall()
+        # np.save(str(voltage)+)
+
         for (voltage, num) in result:
             if num > 30 and voltage:
                 raw_voltages = [self.try_parse_int(x) for x in str(voltage).strip().split(';')]
@@ -438,10 +638,10 @@ class Transnet:
         substations = dict()
         generators = dict()
         lines = dict()
-
         # create lines dictionary
         sql = '''SELECT l.osm_id AS id,
-                st_transform(create_line(l.osm_id), 4326) AS geom,
+                -- st_transform(create_line(l.osm_id), 4326) AS geom,
+                create_line(l.osm_id) AS geom,
                 l.way AS srs_geom, 
                 l.power AS type,
                 l.name,
@@ -450,36 +650,103 @@ class Transnet:
                 l.cables, 
                 w.nodes, 
                 w.tags,
-                st_transform(create_point(w.nodes[1]), 4326) AS first_node_geom,
-                st_transform(create_point(w.nodes[array_length(w.nodes, 1)]), 4326) AS last_node_geom,
+                -- st_transform(create_point(w.nodes[1]), 4326) AS first_node_geom,
+                create_point(w.nodes[1]) AS first_node_geom,
+                -- st_transform(create_point(w.nodes[array_length(w.nodes, 1)]), 4326) AS last_node_geom,
+                create_point(w.nodes[array_length(w.nodes, 1)]) AS last_node_geom,
                 ST_Y(ST_Transform(ST_Centroid(l.way),4326)) AS lat,
                 ST_X(ST_Transform(ST_Centroid(l.way),4326)) AS lon,
                 st_length(st_transform(l.way, 4326), TRUE) AS spheric_length
                 FROM planet_osm_line l, planet_osm_ways w
-                WHERE l.osm_id >= 0 
-                AND l.power ~ 'line|cable|minor_line'
+                -- WHERE l.osm_id >= 0 
+                -- AND l.power ~ 'line|cable|minor_line'
+                WHERE l.power ~ 'line|cable|minor_line'
                 AND l.voltage ~ '%s' 
                 AND l.osm_id = w.id AND %s''' % (voltage_level, where_clause)
-
+        
         self.cur.execute(sql)
         result = self.cur.fetchall()
         # noinspection PyShadowingBuiltins,PyShadowingBuiltins
         for (id, geom, srs_geom, type, name, ref, voltage, cables, nodes, tags, first_node_geom, last_node_geom,
              lat, lon, length) in result:
-            line = wkb.loads(geom, hex=True)
+            # if(name):
+            #     if(name.find('Queen')>-1):
+            #         print(name)
+            #         if(name.find('National Grid Indian Queens-Alverdiscott')>-1):
+            #             print('GOT EM!')
+            line_raw = wkb.loads(geom, hex=True)
             raw_geom = geom
+
             srs_line = wkb.loads(srs_geom, hex=True)
+            # print('srs_line')
+            # print(srs_line)
             length_found_lines += length
-            first_node = wkb.loads(first_node_geom, hex=True)
-            last_node = wkb.loads(last_node_geom, hex=True)
+            last_node_raw = wkb.loads(last_node_geom, hex=True)
+            first_node_raw = wkb.loads(first_node_geom, hex=True)
+
+            #convert to lat/long from integer OSM lat/long format
+            first_node=geometry.Point(first_node_raw.x/100000,first_node_raw.y/100000)
+            # print('first_node')
+            # print(first_node)
+            #convert to lat/long from integer OSM lat/long format
+            last_node=geometry.Point(last_node_raw.x/100000,last_node_raw.y/100000)
+            # print('last_node')
+            # print(last_node)
+
+            # if(name):
+                # if(name.find('National Grid Indian Queens-Alverdiscott')>-1):
+                
+                # print('first_node')
+                # print(first_node)
+                # print('last_node')
+                # print(last_node)
             end_points_geom_dict = dict()
             end_points_geom_dict[nodes[0]] = first_node
             end_points_geom_dict[nodes[-1]] = last_node
+            # print('line raw')
+            # print(line_raw)
+            # print('srs_line')
+            # print(srs_line)
+            line_array=[[]]*len(line_raw.coords)
+            for i in range(0,len(line_raw.coords)):
+                # print(i)
+                x=line_raw.coords[i][0]/100000
+                y=line_raw.coords[i][1]/100000
+                line_array[i]=[x,y]
+
+            line=geometry.LineString(line_array)
+            # print('done')
+            # print(line)
+
+            # for i in range(0,len(line.coords.xy)):
+            #     line[i]=geometry.Point(line.coords.xy[0][i]/100000,line.coords.xy[1][i]/100000)
             lines[id] = Line(id, line, srs_line, type, name.replace(',', ';') if name else None,
                              ref.replace(',', ';') if ref is not None else None,
                              voltage.replace(',', ';').replace('/', ';') if voltage else None, cables,
                              nodes, tags, lat, lon,
                              end_points_geom_dict, length, raw_geom)
+            # if(name):
+            #     if(name=='Balti — Tartu 330 kV'):
+            #         print('')
+            #         print('line.first_node()')
+            #         print(lines[id].first_node())
+            #         print('line.last_node()')
+            #         print(lines[id].last_node())
+            #         print('end_points_geom_dict')
+            #         print(end_points_geom_dict[nodes[0]].xy)
+            #         print(end_points_geom_dict[nodes[-1]].xy)
+            # print('lines[id]')
+            # print(lines[id])
+            # print('lat')
+            # print(lat)
+            # print('long')
+            # print(lon)
+            # print('long')
+            # print(lon)
+            # print('line.end_point_dict[line.first_node()], [station]')
+            # print('lines[id].first_node()')
+            # print(lines[id].first_node())
+            # print(lines[id].end_point_dict[lines[id].first_node()])
             equipment_points.append((lat, lon))
         root.info('Found %s lines', str(len(result)))
 
@@ -494,22 +761,32 @@ class Transnet:
                   ST_Y(ST_Transform(ST_Centroid(p.way),4326)) AS lat,
                   ST_X(ST_Transform(ST_Centroid(p.way),4326)) AS lon
                   FROM planet_osm_line l, planet_osm_polygon p
-                  WHERE l.osm_id >= 0 
-                  AND p.osm_id >= 0
-                  AND p.power ~ 'substation|station|sub_station' 
-                  AND (p.voltage ~ '%s' OR (p.voltage = '') IS NOT FALSE)                   
+                  -- WHERE l.osm_id >= 0 
+                  -- AND p.osm_id >= 0
+                  -- AND p.power ~ 'substation|station|sub_station' 
+                  WHERE p.power ~ 'substation|station|sub_station'
+                  -- AND (p.voltage ~ '%s' OR (p.voltage = '') IS NOT FALSE)                   
                   AND l.power ~ 'line|cable|minor_line' 
                   AND l.voltage ~ '%s' AND %s''' % (self.voltage_levels, voltage_level, where_clause)
 
         if self.close_nodes:
-            sql += ''' AND (st_intersects(l.way, p.way) OR st_distance(l.way, p.way) < 100)'''
+        # if True:
+            # sql += ''' AND (st_intersects(l.way, p.way) OR st_distance(l.way, p.way) < 1000)'''
+            sql += ''' AND (st_intersects(l.way, p.way) OR st_distance(l.way, p.way) < 300)'''
         else:
             sql += ''' AND st_intersects(l.way, p.way)'''
-
+        # print('sql')
+        # print(sql)
+        # quit()
         self.cur.execute(sql)
         result = self.cur.fetchall()
         # noinspection PyShadowingBuiltins,PyShadowingBuiltins
         for (id, geom, type, name, ref, voltage, tags, lat, lon) in result:
+            # if(name=='Viljandi alajaam'):
+            #     print('success')
+            #     # quit()
+            # if(name=='Sopi alajaam'):
+            #     print('Sopi')
             if id not in all_substations:
                 polygon = wkb.loads(geom, hex=True)
                 raw_geom = geom
@@ -535,14 +812,16 @@ class Transnet:
                 ST_Y(ST_Transform(ST_Centroid(p.way),4326)) AS lat,
                 ST_X(ST_Transform(ST_Centroid(p.way),4326)) AS lon
                 FROM planet_osm_line l, planet_osm_polygon p
-                WHERE l.osm_id >= 0 
-                AND p.osm_id >= 0 
-                AND p.power ~ 'plant|generator'               
+                -- WHERE l.osm_id >= 0 
+                -- AND p.osm_id >= 0 
+                WHERE p.power ~ 'plant|generator'               
                 AND l.power ~ 'line|cable|minor_line'
                 AND l.voltage ~ '%s' AND %s''' % (voltage_level, where_clause)
 
         if self.close_nodes:
-            sql += ''' AND (st_intersects(l.way, p.way) OR st_distance(l.way, p.way) < 100)'''
+        # if True:
+            # sql += ''' AND (st_intersects(l.way, p.way) OR st_distance(l.way, p.way) < 1000)'''
+            sql += ''' AND (st_intersects(l.way, p.way) OR st_distance(l.way, p.way) < 300)'''
         else:
             sql += ''' AND st_intersects(l.way, p.way)'''
 
@@ -560,14 +839,27 @@ class Transnet:
                     output1) if output1 is not None else self.parse_power(output2)
                 equipment_points.append((lat, lon))
             else:
-                generators[id] = all_generators[id]
+                generators[id] = all_generators[id] 
         root.info('Found %s generators', str(len(generators)))
-
+        # for g in generators.values():
+        #     print(g.serialize()['name'])
+        # print(boundary)
+        print('before heavy lifting')
+        quit()
         if boundary:
             circuits = self.create_relations_of_region(substations, generators, lines, voltage_level)
+            # print('circuits!')
+            # print(circuits)
+            # stations.update(generators)
         else:
+            # print('no boundary')
             stations = substations.copy()
             stations.update(generators)
+            # print('voltage_level')
+            # print(voltage_level)
+            # print('stations')
+            # print(stations)
+
             circuits = self.create_relations(stations, lines, self.ssid, voltage_level)
 
         return length_found_lines, equipment_points, generators, substations, circuits
@@ -649,7 +941,8 @@ class Transnet:
                         ST_X(ST_Transform(ST_Centroid(l.way),4326)) AS lon,
                         st_length(st_transform(l.way, 4326), TRUE) AS spheric_length
                         FROM planet_osm_line l, planet_osm_ways w
-                        WHERE l.osm_id >= 0 AND l.power ~ 'line|cable|minor_line'
+                        -- WHERE l.osm_id >= 0 AND l.power ~ 'line|cable|minor_line'
+                        WHERE l.power ~ 'line|cable|minor_line'
                         AND (l.voltage IS NULL OR l.cables IS NULL) AND l.osm_id = w.id AND %s''' % where_clause
 
         self.cur.execute(lines_sql)
@@ -678,9 +971,8 @@ class Transnet:
 
             if power_type in ['line', 'cable', 'minor_line']:
                 lines[osm_id] = temp_line
-
         with open('{0}/lines_missing_data.json'.format(self.destdir), 'w') as outfile:
-            json.dump([l.serialize() for osm_id, l in lines.iteritems()], outfile, indent=4)
+            json.dump([l.serialize() for osm_id, l in lines.items()], outfile, indent=4)
 
         file_size = self.convert_size_mega_byte(getsize('{0}/lines_missing_data.json'.format(self.destdir)))
 
@@ -715,8 +1007,8 @@ class Transnet:
                                               ST_X(ST_Transform(ST_Centroid(p.way), 4326)) AS lon
                                             FROM planet_osm_line l, planet_osm_polygon p
                                             WHERE %s
-                                                  AND l.osm_id >= 0
-                                                  AND p.osm_id >= 0
+                                                  -- AND l.osm_id >= 0
+                                                  -- AND p.osm_id >= 0
                                                   AND p.power ~ 'substation|station|sub_station|plant|generator'
                                                   AND l.power ~ 'line|cable|minor_line'
                                                   AND st_intersects(l.way, p.way);''' % \
@@ -805,7 +1097,7 @@ class Transnet:
                     stations_missing_data[osm_id] = temp_station
 
         with open('{0}/stations_missing_data.json'.format(self.destdir), 'w') as outfile:
-            json.dump([s.serialize() for osm_id, s in stations_missing_data.iteritems()], outfile, indent=4)
+            json.dump([s.serialize() for osm_id, s in stations_missing_data.items()], outfile, indent=4)
 
         file_size = self.convert_size_mega_byte(getsize('{0}/stations_missing_data.json'.format(self.destdir)))
 
@@ -882,6 +1174,10 @@ class Transnet:
             (length_found_lines, equipment_points, generators, substations, circuits) = self.inference_for_voltage(
                 voltage_level, where_clause, length_found_lines, equipment_points,
                 all_substations, all_generators, boundary)
+            # print('circuits')
+            # print(circuits[0])
+            # print('v')
+            # print(voltage_level)
             all_generators.update(generators)
             all_substations.update(substations)
             all_circuits.extend(circuits)
@@ -890,7 +1186,7 @@ class Transnet:
         equipments_multipoint = MultiPoint(equipment_points)
         map_centroid = equipments_multipoint.centroid
         logging.debug('Centroid lat:%lf, lon:%lf', map_centroid.x, map_centroid.y)
-        all_circuits = self.remove_duplicates(all_circuits)
+        # all_circuits = self.remove_duplicates(all_circuits)
         root.info('Inference took %s millies', str(datetime.now() - time))
 
         transnet_instance.export_to_json(all_circuits)
@@ -903,7 +1199,8 @@ class Transnet:
             load_estimator = LoadEstimator(all_substations, boundary)
             partition_by_station_dict, population_by_station_dict = load_estimator.partition()
             cities = load_estimator.cities
-
+        print(self.topology)
+        print(self.destdir)
         if self.topology:
             root.info('Plot inferred transmission system topology')
             plotter = Plotter(self.voltage_levels)
@@ -911,6 +1208,8 @@ class Transnet:
 
         try:
             root.info('CSV generation started ...')
+            # print('all_circuits')
+            # print(all_circuits)
             csv_writer = CSVWriter(all_circuits, root)
             csv_writer.publish(self.destdir + '/csv')
         except Exception as ex:
@@ -990,7 +1289,7 @@ if __name__ == '__main__':
     parser.add_option("-s", "--ssid", action="store", dest="ssid",
                       help="substation id to start the inference from")
     parser.add_option("-p", "--poly", action="store", dest="poly",
-                      help="poly file that defines the region to perform the inference for")
+                      help="poly file that defines the region to perform the nce for")
     parser.add_option("-b", "--bpoly", action="store", dest="bounding_polygon",
                       help="defines the region to perform the inference for within the specified polygon in WKT, e.g."
                            "'POLYGON((128.74 41.68, 142.69 41.68, 142.69 30.84, 128.74 30.84, 128.74 41.68))'")
@@ -1038,7 +1337,7 @@ if __name__ == '__main__':
     topology = options.topology if options.topology else False
     voltage_levels = options.voltage_levels
     load_estimation = options.load_estimation if options.load_estimation else False
-    destdir = '../models/countries/' + options.destdir if options.destdir else '../results'
+    destdir = '../models/' + options.destdir if options.destdir else '../results'
     continent = options.continent
     matlab = options.matlab
 
@@ -1074,7 +1373,6 @@ if __name__ == '__main__':
                 transnet_instance.prepare_planet_json(continent)
         else:
             transnet_instance.run()
-
         logging.info("#################################################")
     except Exception as e:
         root.error(e.message)

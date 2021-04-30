@@ -3,12 +3,12 @@ import logging
 import re
 import uuid
 from collections import OrderedDict
-from string import maketrans
+# from string import maketrans
 from xml.dom.minidom import parse
 import ast
 
 import ogr
-import osr
+# import osr
 from CIM14.ENTSOE.Equipment.Core import BaseVoltage, GeographicalRegion, SubGeographicalRegion, ConnectivityNode, \
     Terminal
 from CIM14.ENTSOE.Equipment.LoadModel import LoadResponseCharacteristic
@@ -123,19 +123,23 @@ class CimWriter:
 
             # self.root.info('The inferred net\'s length is %s meters', str(total_line_length))
 
-        self.attach_loads()
+        print('NOTE: load attaching is not working in this version, skipping ')
+        # self.attach_loads()
 
         cimwrite(self.cimobject_by_uuid_dict, file_name + '.xml', encoding='utf-8')
         cimwrite(self.cimobject_by_uuid_dict, file_name + '.rdf', encoding='utf-8')
 
         # pretty print cim file
         xml = parse(file_name + '.xml')
-        pretty_xml_as_string = xml.toprettyxml(encoding='utf-8')
+        # pretty_xml_as_string = xml.toprettyxml(encoding='utf-8')
+        pretty_xml_as_string = xml.toprettyxml(encoding='utf-8').decode('utf-8')
         matches = re.findall('#x[0-9a-f]{4}', pretty_xml_as_string)
         for match in matches:
-            pretty_xml_as_string = pretty_xml_as_string.replace(match, unichr(int(match[2:len(match)], 16)))
+            # pretty_xml_as_string = pretty_xml_as_string.replace(match, unichr(int(match[2:len(match)], 16)))
+            pretty_xml_as_string = pretty_xml_as_string.replace(match, chr(int(match[2:len(match)], 16)))
         pretty_file = io.open(file_name + '_pretty.xml', 'w', encoding='utf8')
-        pretty_file.write(unicode(pretty_xml_as_string))
+        # pretty_file.write(unicode(pretty_xml_as_string))
+        pretty_file.write(pretty_xml_as_string)
         pretty_file.close()
 
     def substation_to_cim(self, osm_substation, circuit_voltage):
@@ -259,7 +263,8 @@ class CimWriter:
             if winding_type == winding.windingType:
                 winding.windingType = self.winding_types[index + 1]
                 break
-            index += 1
+            if(index<1): #very rare issue which occurs in south africa and lesotho is index being greater than 2, which breaks the code. We sidestep the issue here.
+                index += 1
 
     def add_transformer_winding(self, osm_substation_id, winding_voltage, transformer):
         new_transformer_winding = TransformerWinding(name='TW_' + str(osm_substation_id) + '_' + str(winding_voltage),
@@ -289,7 +294,8 @@ class CimWriter:
         return new_transformer_winding
 
     def attach_loads(self):
-        for load in self.cimobject_by_uuid_dict.values():
+        # for load in self.cimobject_by_uuid_dict.values():
+        for load in list(self.cimobject_by_uuid_dict.values()):
             if isinstance(load, PowerTransformer):
                 transformer = load
                 osm_substation_id = transformer.name.split('_')[1]
@@ -335,7 +341,7 @@ class CimWriter:
     @staticmethod
     def escape_string(string):
         if string is not None:
-            string = unicode(string.translate(maketrans('-]^$/. ', '_______')), 'utf-8')
+            string = string.translate(str.maketrans('-]^$/. ', '_______'))
             hexstr = ''
             for c in string:
                 if ord(c) > 127:
@@ -365,7 +371,8 @@ class CimWriter:
         # create a geometry from coordinates
         point = ogr.Geometry(ogr.wkbPoint)
         point.AddPoint(merc_lon, merc_lat)
-
+        print('FRUIT')
+        quit()
         # create coordinate transformation
         in_spatial_ref = osr.SpatialReference()
         in_spatial_ref.ImportFromEPSG(input_epsg)

@@ -48,6 +48,9 @@ sudo -u postgres createdb -U postgres -h localhost transnet_template
 sudo -u postgres psql -d transnet_template -U postgres -q -h localhost -c "CREATE EXTENSION postgis;"
 sudo -u postgres psql -d transnet_template -U postgres -q -h localhost -c "CREATE EXTENSION hstore;"
 sudo -u postgres psql -d transnet_template -U postgres -h localhost -f transnet/sql/transnet_functions.sql
+sudo -u postgres psql -d great-britain -U postgres -q -h localhost -c "CREATE EXTENSION postgis;"
+sudo -u postgres psql -d great-britain -U postgres -q -h localhost -c "CREATE EXTENSION hstore;"
+sudo -u postgres psql -d great-britain -U postgres -h localhost -f transnet/sql/transnet_functions.sql
 ```
 ### Data Preparation
 The data is filtered for power-relevant data by the _osmosis_ tool and the import to the PostgreSQL database is done with the _osm2pgsql_ tool.

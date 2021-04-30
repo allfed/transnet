@@ -7,15 +7,19 @@ fi
 
 
 machine=$(pwd)
-
+echo $machine
 if [[ $machine == *"epezhman"* ]]
 then
-    echo 'Machine: epezhman'
-    matlab='/usr/local/bin/matlab'
+	echo 'Machine: epezhman'
+	matlab='/usr/local/bin/matlab'
 elif [[ $machine == *"leimhofe"* ]]
 then
-    echo 'Machine: leimhofe'
-    matlab='/usr/bin/matlab'
+	echo 'Machine: leimhofe'
+	matlab='/usr/bin/matlab'
+elif [[ $machine == *"dmrivers"* ]]
+then
+	echo 'Machine: dmrivers'
+	matlab='/usr/local/MATLAB/R2021a/bin/matlab'
 fi
 
 mkdir -p "../logs/$destdir"

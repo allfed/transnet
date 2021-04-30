@@ -55,8 +55,10 @@ class CSVWriter:
         id_by_station_dict = dict()
         line_counter = 1
 
-        with open(file_name + '_nodes.csv', 'wb') as nodes_file, \
-                open(file_name + '_lines.csv', 'wb') as lines_file:
+        # with open(file_name + '_nodes.csv', 'wb') as nodes_file, \
+        #         open(file_name + '_lines.csv', 'wb') as lines_file:
+        with open(file_name + '_nodes.csv', 'w') as nodes_file, \
+                open(file_name + '_lines.csv', 'w') as lines_file:
 
             nodes_writer = csv.writer(nodes_file, delimiter=',', quoting=csv.QUOTE_MINIMAL)
             nodes_writer.writerow(
@@ -146,16 +148,20 @@ class CSVWriter:
                         coeffs = self.coeffs_of_voltage[int(voltage_selected_round)]
                         # Specific resistance of the transmission lines.
                         if coeffs['wires_typical']:
-                            r_ohm_kms = coeffs['r'] / (int(wires_selected) / coeffs['wires_typical']) / (
+                            if(int(wires_selected)==0):
+                                ws=1
+                            else:
+                                ws=int(wires_selected)
+                            r_ohm_kms = coeffs['r'] / (ws / coeffs['wires_typical']) / (
                                 int(cables_selected) / 3.0)
                             # Specific reactance of the transmission lines.
-                            x_ohm_kms = coeffs['x'] / (int(wires_selected) / coeffs['wires_typical']) / (
+                            x_ohm_kms = coeffs['x'] / (ws / coeffs['wires_typical']) / (
                                 int(cables_selected) / 3.0)
                             # Specific capacitance of the transmission lines.
-                            c_nf_kms = coeffs['c'] * (int(wires_selected) / coeffs['wires_typical']) * (
+                            c_nf_kms = coeffs['c'] * (ws / coeffs['wires_typical']) * (
                                 int(cables_selected) / 3.0)
                             # Specific maximum current of the transmission lines.
-                            i_th_max_kms = coeffs['i'] * (int(wires_selected) / coeffs['wires_typical']) * (
+                            i_th_max_kms = coeffs['i'] * (ws / coeffs['wires_typical']) * (
                                 int(cables_selected) / 3.0)
                 except Exception as ex:
                     self.logger.error(ex.message)
