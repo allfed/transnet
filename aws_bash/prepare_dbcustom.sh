@@ -7,24 +7,30 @@ fi
 
 mkdir -p "../data/$destdir"
 
-if [ ! -z ${ddump_url+x} ]
-  then
-        echo "Downloading $ddump_url"
-        wget "$ddump_url" -O "../data/$destdir/ddump.pbf"
-        ddump="../data/$destdir/ddump.pbf"
-  else
-  echo "Using dump file $ddump"
+ddump="../data/$destdir/ddump.pbf";
+if [ ! -z ${ddump_url+x} ]; then
+    if [ -f "$ddump" ]; then
+        echo "$ddump already exists, skipping...";
+    else
+        echo "Downloading $ddump_url";
+        wget "$ddump_url" -O $ddump;
+    fi
+else
+    echo "Using dump file $ddump";
 fi
 
 #download poly files, move them to appropriate locations
-if [ ! -z ${pfile_url+x} ]
-  then
+if [ ! -z ${pfile_url+x} ]; then
     echo "Downloading $pfile_url"
-    wget "$pfile_url" -O "../data/planet/$destdir/pfile.poly"
+    curl $pfile_url --create-dirs -o ../data/planet/$destdir/pfile.poly
+
+    echo
+    echo
+    echo
 
     echo "Downloading Poly files for all countries in continent"
     ping download.geofabrik.de -c 3 #this helps for some reason...
-    wget -A poly -r -l 1 -nd http://download.geofabrik.de/$continent/
+    wget -A poly -r -l 1 -nd http://download.geofabrik.de/$continent/ -q
     set -o errexit -o nounset
     for file in *.poly
     do
@@ -33,12 +39,12 @@ if [ ! -z ${pfile_url+x} ]
       mv -- "$file" "../data/${continent}/${dir}/pfile.poly"
     done
 
-  else
+else
     echo "Using existing poly files"
 fi
 
 echo "1. Drop the database"
-psql -U $duser -h localhost -c "DROP DATABASE $dname;"
+psql -U $duser -h localhost -c "DROP DATABASE IF EXISTS $dname;"
 
 echo "2. create new database"
 psql -U $duser -d transnet_template -h localhost -c "CREATE DATABASE $dname WITH TEMPLATE = transnet_template;"
