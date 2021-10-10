@@ -1,0 +1,10 @@
+./getConPoly.sh:4:wget "$pfile_url" -O "../data/planet/$destdir/pfile.poly"
+./getConPoly.sh:8:wget -A poly -r -l 1 -nd http://download.geofabrik.de/$continent/
+./guide.sh:5:wget -qO- "http://download.geofabrik.de" | grep '<td class="subregion"' | sed -E 's/.*<a href="\.\/([-a-z]*)\.html.*<\/a><\/td>/\1/g'
+./guide.sh:10:wget -qO- "http://download.geofabrik.de/$continent.html" | grep -e '<tr onMouseOver=.*<td class="subregion"' | sed -E 's/.*<a href="([-a-z]*\/)?([-a-z]*).html">([-A-Za-z \(\)\,]*)<\/a><\/td>/\2 (\3)/g'
+./loadContinentsPolys.sh:13:	wget "$pfile_url" -O "../data/planet/$destdir/pfile.poly"
+./prepare_db.sh:13:        wget "$ddump_url" -O "../data/$destdir/ddump.pbf"
+./prepare_db.sh:22:        wget "$pfile_url" -O "../data/$destdir/pfile.poly"
+./prepare_dbcustom.sh:13:        wget "$ddump_url" -O "../data/$destdir/ddump.pbf"
+./prepare_dbcustom.sh:23:    wget "$pfile_url" -O "../data/planet/$destdir/pfile.poly"
+./prepare_dbcustom.sh:27:    wget -A poly -r -l 1 -nd http://download.geofabrik.de/$continent/

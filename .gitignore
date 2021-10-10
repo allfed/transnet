@@ -9,3 +9,5 @@ models/*
 !logs/planet_matlab.log
 !logs/whole_continent_topology.log
 !logs/whole_continent_matlab.log
+*.log
+__pycache__

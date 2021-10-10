@@ -1,0 +1,1 @@
+FATAL:   could not open image /vortexfs1/home/msantos/Code/transnet/bash/postgis_latest.sif: failed to retrieve path for /vortexfs1/home/msantos/Code/transnet/bash/postgis_latest.sif: lstat /vortexfs1/home/msantos/Code/transnet/bash/postgis_latest.sif: no such file or directory
