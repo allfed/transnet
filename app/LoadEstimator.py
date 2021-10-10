@@ -1,6 +1,6 @@
 import logging
 
-import mysql.connector
+#import mysql.connector
 import numpy as np
 from scipy.spatial import Voronoi
 from shapely import wkt

@@ -69,9 +69,9 @@ class Plotter:
 					linev=line.voltage.split(';')[1]
 				else:
 					linev=line.voltage.split(';')[0]
-				plt.plot(x, y, color=self.color_dict[linev], alpha=1,
-						 linewidth=self.thickness_dict[linev], solid_capstyle='round',
-						 zorder=self.zorder_dict[linev], transform=ccrs.PlateCarree())
+				plt.plot(x, y, color=self.color_dict[linev.lstrip(' ')], alpha=1,
+						 linewidth=self.thickness_dict[linev.lstrip(' ')], solid_capstyle='round',
+						 zorder=self.zorder_dict[linev.lstrip(' ')], transform=ccrs.PlateCarree())
 		# plt.show()
 		if cities:
 			for city in cities:
@@ -109,31 +109,31 @@ class Plotter:
 		ax.stock_img()
 		plt.savefig(destdir + '/topology_geographical.png', bbox_inches='tight', pad_inches=0, dpi=600)
 
-		countries = cfeature.NaturalEarthFeature(
-			category='cultural',
-			name='admin_0_countries',
-			scale='10m',
-			facecolor='none')
-		states_provinces = cfeature.NaturalEarthFeature(
-			category='cultural',
-			name='admin_1_states_provinces_shp',
-			scale='10m',
-			facecolor='none')
-		ax.add_feature(states_provinces, edgecolor='#ffffff', linewidth=0.3)
-		ax.add_feature(countries, edgecolor='#333333', linewidth=0.5)
-		kw = dict(resolution='50m', category='cultural', name='populated_places_simple')
-		places_shp = shpreader.natural_earth(**kw)
-		shp = shpreader.Reader(places_shp)
-		for record, place in zip(shp.records(), shp.geometries()):
-			if xmax > place.x > xmin and ymax > place.y > ymin:
+		#countries = cfeature.NaturalEarthFeature(
+		#	category='cultural',
+		#	name='admin_0_countries',
+		#	scale='10m',
+		#	facecolor='none')
+		#states_provinces = cfeature.NaturalEarthFeature(
+		#	category='cultural',
+		#	name='admin_1_states_provinces_shp',
+		#	scale='10m',
+		#	facecolor='none')
+		#ax.add_feature(states_provinces, edgecolor='#ffffff', linewidth=0.3)
+		#ax.add_feature(countries, edgecolor='#333333', linewidth=0.5)
+		#kw = dict(resolution='50m', category='cultural', name='populated_places_simple')
+		#places_shp = shpreader.natural_earth(**kw)
+		#shp = shpreader.Reader(places_shp)
+		#for record, place in zip(shp.records(), shp.geometries()):
+		#	if xmax > place.x > xmin and ymax > place.y > ymin:
 
 				#in my version, .decode() was throwing an error
-				name = record.attributes['name']#.decode('latin-1')
+		#		name = record.attributes['name']#.decode('latin-1')
 				
-				plt.plot(place.x, place.y, marker='o', markerfacecolor='#ff0000', linestyle="None",
-						 markersize=2, zorder=11)
-				ax.annotate(name, (place.x, place.y), fontsize=4)
-		plt.savefig(destdir + '/topology_administrative.png', bbox_inches='tight', pad_inches=0, dpi=600)
+		#		plt.plot(place.x, place.y, marker='o', markerfacecolor='#ff0000', linestyle="None",
+		#				 markersize=2, zorder=11)
+		#		ax.annotate(name, (place.x, place.y), fontsize=4)
+		#plt.savefig(destdir + '/topology_administrative.png', bbox_inches='tight', pad_inches=0, dpi=600)
 
 		# Voronoi partitions
 		if partition_by_station_dict:
@@ -154,3 +154,4 @@ class Plotter:
 		x, y = polygon.exterior.xy
 		plt.plot(x, y, color=color, alpha=1,
 				 linewidth=2, solid_capstyle='round', zorder=zorder)
+

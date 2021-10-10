@@ -7,7 +7,7 @@ from collections import OrderedDict
 from xml.dom.minidom import parse
 import ast
 
-import ogr
+from osgeo import ogr
 # import osr
 from CIM14.ENTSOE.Equipment.Core import BaseVoltage, GeographicalRegion, SubGeographicalRegion, ConnectivityNode, \
     Terminal
@@ -20,7 +20,7 @@ from CIM14.IEC61970.Wires import ACLineSegment, EnergyConsumer
 from PyCIM import cimwrite
 from shapely.ops import linemerge
 
-from LoadEstimator import LoadEstimator
+#from LoadEstimator import LoadEstimator
 from CSVWriter import CSVWriter
 
 
@@ -323,9 +323,9 @@ class CimWriter:
         if transformer_winding is None:
             transformer_winding = self.add_transformer_winding(osm_substation_id, winding_voltage, transformer)
         connectivity_node = self.connectivity_by_uuid_dict[transformer_winding.UUID]
-        estimated_load = LoadEstimator.estimate_load(self.population_by_station_dict[str(
-            osm_substation_id)]) if self.population_by_station_dict is not None else LoadEstimator.estimate_load_country(
-            self.country_name, self.count_substations)
+        estimated_load = 0#LoadEstimator.estimate_load(self.population_by_station_dict[str(
+        #    osm_substation_id)]) if self.population_by_station_dict is not None else LoadEstimator.estimate_load_country(
+        #    self.country_name, self.count_substations)
         load_response_characteristic = LoadResponseCharacteristic(exponentModel=False, pConstantPower=estimated_load)
         load_response_characteristic.UUID = str(CimWriter.uuid())
         energy_consumer = EnergyConsumer(name='L_' + osm_substation_id, LoadResponse=load_response_characteristic,

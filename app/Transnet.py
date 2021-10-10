@@ -71,13 +71,18 @@ class Transnet:
         print(_password)
         print('db')
         print(_database)
-        print('user')
+        print('host')
         print(_host)
         print('port')
         print(_port)
+        print('user')
+        print(_user)
         #this would be "psql -p 5432 -h 127.0.0.1 -d austria -U postgres -W" on the command line, for me
-        self.conn = psycopg2.connect(password="asdfjkl1", **self.connection)
+        self.conn = psycopg2.connect(password=_password, **self.connection)
         self.cur = self.conn.cursor()
+
+        print('self.close_nodes')
+        print(self.close_nodes)
 
         self.covered_nodes = None
         self.geod = pyproj.Geod(ellps='WGS84')
@@ -375,9 +380,12 @@ class Transnet:
             #     print('distance')
             #     print(distance)
             #     print(node)
-            # if distance and distance < 1000:
-            if distance and distance < 300:
-                return station.id
+            if(self.close_nodes):
+                if distance and distance < 1000:
+                    return station.id
+            else:
+                if distance and distance < 300:
+                    return station.id
         return None
 
     def get_node_station_ditance(self, node, station):
@@ -609,7 +617,7 @@ class Transnet:
                 raw_voltages = [self.try_parse_int(x) for x in str(voltage).strip().split(';')]
                 voltages = voltages.union(set(raw_voltages))
         for voltage in sorted(voltages):
-            if voltage > 99999:
+            if voltage > 199999:
                 if first_round:
                     voltages_string += str(voltage)
                     first_round = False
@@ -662,9 +670,10 @@ class Transnet:
                 -- AND l.power ~ 'line|cable|minor_line'
                 WHERE l.power ~ 'line|cable|minor_line'
                 AND l.voltage ~ '%s' 
-                AND l.osm_id = w.id AND %s''' % (voltage_level, where_clause)
-        
+                AND l.osm_id = w.id AND %s
+                LIMIT 100''' % (voltage_level, where_clause)
         self.cur.execute(sql)
+
         result = self.cur.fetchall()
         # noinspection PyShadowingBuiltins,PyShadowingBuiltins
         for (id, geom, srs_geom, type, name, ref, voltage, cables, nodes, tags, first_node_geom, last_node_geom,
@@ -770,9 +779,9 @@ class Transnet:
                   AND l.voltage ~ '%s' AND %s''' % (self.voltage_levels, voltage_level, where_clause)
 
         if self.close_nodes:
-        # if True:
-            # sql += ''' AND (st_intersects(l.way, p.way) OR st_distance(l.way, p.way) < 1000)'''
-            sql += ''' AND (st_intersects(l.way, p.way) OR st_distance(l.way, p.way) < 300)'''
+        #if True:
+            sql += ''' AND (st_intersects(l.way, p.way) OR st_distance(l.way, p.way) < 1500)'''
+            #sql += ''' AND (st_intersects(l.way, p.way) OR st_distance(l.way, p.way) < 300)'''
         else:
             sql += ''' AND st_intersects(l.way, p.way)'''
         # print('sql')
@@ -845,7 +854,6 @@ class Transnet:
         #     print(g.serialize()['name'])
         # print(boundary)
         print('before heavy lifting')
-        quit()
         if boundary:
             circuits = self.create_relations_of_region(substations, generators, lines, voltage_level)
             # print('circuits!')
@@ -1142,11 +1150,13 @@ class Transnet:
             if self.find_missing_data:
                 self.find_missing_data_for_country()
 
+
     def modeling(self, country_name):
         # create dest dir
         if not exists(self.destdir):
             makedirs(self.destdir)
-
+        print('country name')
+        print(country_name)
         root.info('Infer for %s', country_name)
 
         time = datetime.now()
@@ -1185,7 +1195,7 @@ class Transnet:
         root.info('Total length of all found lines is %s meters', str(length_found_lines))
         equipments_multipoint = MultiPoint(equipment_points)
         map_centroid = equipments_multipoint.centroid
-        logging.debug('Centroid lat:%lf, lon:%lf', map_centroid.x, map_centroid.y)
+        # logging.debug('Centroid lat:%lf, lon:%lf', map_centroid.x, map_centroid.y)
         # all_circuits = self.remove_duplicates(all_circuits)
         root.info('Inference took %s millies', str(datetime.now() - time))
 
@@ -1207,11 +1217,12 @@ class Transnet:
             plotter.plot_topology(all_circuits, equipments_multipoint, partition_by_station_dict, cities, self.destdir)
 
         try:
-            root.info('CSV generation started ...')
+            #root.info('CSV generation started ...')
+            root.info('Skipping CSV generation')
             # print('all_circuits')
             # print(all_circuits)
-            csv_writer = CSVWriter(all_circuits, root)
-            csv_writer.publish(self.destdir + '/csv')
+            #csv_writer = CSVWriter(all_circuits, root)
+            #csv_writer.publish(self.destdir + '/csv')
         except Exception as ex:
             root.error(ex.message)
         try:
@@ -1337,7 +1348,7 @@ if __name__ == '__main__':
     topology = options.topology if options.topology else False
     voltage_levels = options.voltage_levels
     load_estimation = options.load_estimation if options.load_estimation else False
-    destdir = '../models/' + options.destdir if options.destdir else '../results'
+    destdir = '../../transnet-models/' + options.destdir if options.destdir else '../results'
     continent = options.continent
     matlab = options.matlab
 

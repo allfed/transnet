@@ -6,28 +6,17 @@ if [ "$#" -ne 0 ]; then
 fi
 
 
-machine=$(pwd)
-echo $machine
-if [[ $machine == *"epezhman"* ]]
-then
-	echo 'Machine: epezhman'
-	matlab='/usr/local/bin/matlab'
-elif [[ $machine == *"leimhofe"* ]]
-then
-	echo 'Machine: leimhofe'
-	matlab='/usr/bin/matlab'
-elif [[ $machine == *"dmrivers"* ]]
-then
-	echo 'Machine: dmrivers'
-	matlab='/usr/local/MATLAB/R2021a/bin/matlab'
-fi
-
 mkdir -p "../logs/$destdir"
 
+echo $duser
+#port=cat /vortexfs1/home/msantos/Code/pgre/port.txt
+host=pn135
+port=2984
+echo $port
 # run transnet
 cdir=`pwd`
 cd ../app
-python Transnet.py -p "../data/$destdir/pfile.poly" -D $dname -U $duser -X $dpassword -d $destdir -V $vlevels $trans_args| tee "../logs/$destdir/transnet.log"
+python Transnet.py -p "../data/$destdir/pfile.poly" -H $host -D $dname -U $duser -X $dpassword -d $destdir -V $vlevels $trans_args -P $port| tee "../logs/$destdir/transnet.log"
 cd $cdir
 
 #run matlab
